@@ -30,7 +30,15 @@
         <Border Grid.Column="1" Height="15" Background="White" Margin="10,25,10,394">
             <TextBlock Text="Notas ingresadas" HorizontalAlignment="Center" FontSize="11" FontStretch="Expanded"/>
         </Border>
-        <ListBox Name="Note_List" ListBoxItem.Selected="{Binding ElementName=Archive_Notes, Path=SelectedValue}"  Grid.Column="1" HorizontalAlignment="Center" Width="280" Margin="0,40,0,40" Height="327" VerticalAlignment="Top"/>
+        <ListView Name="Note_List" Grid.Column="1" HorizontalAlignment="Center" Width="280" Margin="0,40,0,40" Height="327" VerticalAlignment="Top">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding id}" Header="ID"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding date}" Header="Date"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding note}" Header="Note"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
         <Button HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Archivar" Margin="50,20" Click="Archivar_Click" Grid.Column="1" Width="50"/>
         <Button VerticalAlignment="Bottom" Content="Borrar" Margin="50,20" Click="Borrar_Click" Grid.Column="1" HorizontalAlignment="Right" Width="50"/>
 
@@ -38,11 +46,29 @@
         <Border Grid.Column="2" Height="15" Background="White" Margin="10,25,10,394">
             <TextBlock Text="Notas archivadas" HorizontalAlignment="Center" FontSize="11" FontStretch="Expanded"/>
         </Border>
-        <ListBox Name="Archive_Notes" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="177" Width="280" Margin="0,40,0,0"/>
+        <!--<ListBox Name="Archive_Notes" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="177" Width="280" Margin="0,40,0,0"/>-->
+        <ListView Name="Archive_Notes" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="177" Width="280" Margin="0,40,0,0" >
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding id}" Header="ID"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding date}" Header="Creado"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding note}" Header="Note"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding FinishDate}" Header="Archivado"/>
+                </GridView>
+            </ListView.View>            
+        </ListView>
         <Border Grid.Column="2" Height="15" Background="White" Margin="10,222,10,197">
             <TextBlock Text="Notas archivadas" HorizontalAlignment="Center" FontSize="11" FontStretch="Expanded"/>
         </Border>
-        <ListBox x:Name="Deleted_Notes" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="177" Width="280" Margin="0,237,0,0"/>
+        <ListView Name="Deleted_Notes" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="177" Width="280" Margin="0,237,0,0">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding id}" Header="ID"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding date}" Header="Date"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding note}" Header="Note"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
 
 
 
