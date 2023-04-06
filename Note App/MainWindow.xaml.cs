@@ -14,25 +14,88 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using System.IO;
+using System.Windows.Threading;
 
 namespace Note_App
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// The main idea is to take notes, saving them with a name, and having the posibility
     /// </summary>
     public partial class MainWindow : Window
     {
+        //list of notes, seguramente sea mas facil empezar a trabajr con un diccionario
         List<Notes> pendingNotesList = new List<Notes>();
         List<OldNotes> archivedNotesList = new List<OldNotes>();
         List<OldNotes> deletedNotesList = new List<OldNotes>();
-        int contar = 22;
+
         public MainWindow()
         {
             InitializeComponent();
+            reloj();
+            Leer_Notas();
             Mostrar_Notas();
 
         }
 
+
+        //funciones para leer y escribir los archivos de texto
+        private void Leer_Notas()
+        {
+            string line;
+            StreamReader readerPending = new StreamReader(@"..\..\Notas_Pendientes.txt");
+            while ((line = readerPending.ReadLine()) != null)
+            {
+                string[] words = line.Split(',');
+                pendingNotesList.Add(new Notes(words[0], words[1], words[2]));
+            }
+            readerPending.Close();
+            
+            StreamReader readerArchived = new StreamReader(@"..\..\Notas_Archivadas.txt");
+            while ((line = readerArchived.ReadLine()) != null)
+            {
+                string[] words = line.Split(',');
+                archivedNotesList.Add(new OldNotes(words[0], words[1], words[2], words[3]));
+            }
+            readerArchived.Close();
+            
+            StreamReader readerDeleted = new StreamReader(@"..\..\Notas_Borradas.txt");
+            while ((line = readerDeleted.ReadLine()) != null)
+            {
+                string[] words = line.Split(',');
+                deletedNotesList.Add(new OldNotes(words[0], words[1], words[2], words[3]));
+            }
+            readerDeleted.Close();
+        }
+        private void Escribir_notas_pendientes()
+        {
+            File.WriteAllText(@"..\..\Notas_Pendientes.txt", String.Empty);
+            foreach (Notes notas in pendingNotesList)
+            {
+                string lineas = notas.note + "," + notas.title + "," + notas.date + "\n";
+                File.AppendAllText(@"..\..\Notas_Pendientes.txt", lineas);
+            }
+        }
+        private void Escribir_notas_archivadas()
+        {
+            File.WriteAllText(@"..\..\Notas_Archivadas.txt", String.Empty);
+            foreach (OldNotes notas in archivedNotesList)
+            {
+                string lineas = notas.note + "," + notas.title + "," + notas.date + "," + notas.FinishDate + "\n";
+                File.AppendAllText(@"..\..\Notas_Archivadas.txt", lineas);
+            }
+        }
+        private void Escribir_notas_borradas()
+        {
+            File.WriteAllText(@"..\..\Notas_Borradas.txt", String.Empty);
+            foreach (OldNotes notas in deletedNotesList)
+            {
+                string lineas = notas.note + "," + notas.title + "," + notas.date + "," + notas.FinishDate + "\n";
+                File.AppendAllText(@"..\..\Notas_Borradas.txt", lineas);
+            }
+        }
+
+        //funcion que actualiza lo que aparece en las lsitview
         private void Mostrar_Notas()
         {
             Note_List.ItemsSource = null;
@@ -44,15 +107,20 @@ namespace Note_App
 
         }
 
+
+
+        //funciones de los botones 
         private void Guardar_Click(object sender, RoutedEventArgs e)
         {
-            if (Entry_Box.Text == null || Entry_Box.Text.Trim() == "")
+            if (Titulo_Box.Text == null || Titulo_Box.Text.Trim() == "")
             {
                 return;
             }
-            pendingNotesList.Add(new Notes(contar, Entry_Box.Text));
-            contar++;
+            pendingNotesList.Add(new Notes(Nota_box.Text, Titulo_Box.Text,DateTime.Now.ToString()));
             Mostrar_Notas();
+            Titulo_Box.Clear();
+            Nota_box.Clear();
+            Escribir_notas_pendientes();
         }
 
         private void Archivar_Click(object sender, RoutedEventArgs e)
@@ -61,52 +129,71 @@ namespace Note_App
             {
                 return;
             }
-            int idx = Note_List.SelectedIndex;
-            archivedNotesList.Add(new OldNotes(pendingNotesList[idx].id, pendingNotesList[idx].note, pendingNotesList[idx].date));
-            pendingNotesList.RemoveAt(idx);
+            int indexOfPending = Note_List.SelectedIndex;
+            string finishTime = DateTime.Now.ToString();
+            archivedNotesList.Add(new OldNotes(pendingNotesList[indexOfPending].note,pendingNotesList[indexOfPending].title, pendingNotesList[indexOfPending].date, finishTime));
+            pendingNotesList.RemoveAt(indexOfPending);
             Mostrar_Notas();
-            //string paraArchivar = Note_List.SelectedValue.ToString();
-            //int indexParaArchivar = Note_List.SelectedIndex;
-            ////Archive_Notes.Items.Add("Fecha y hora de archivado\n" + DateTime.Now.ToString() + "\n" + paraArchivar);
-            //if(pendingNotesList != null)
-            //{
-            //    pendingNotesList.RemoveAt(indexParaArchivar);
-            //}
+            Escribir_notas_archivadas();
+            Escribir_notas_pendientes();
         }
 
 
         private void Borrar_Click(object sender, RoutedEventArgs e)
         {
-            Deleted_Notes.Items.Add("Fecha y hora de borrado\n" + DateTime.Now.ToString() + "\n" + Note_List.SelectedValue);
-            Note_List.Items.Clear();
-
+            if (Note_List.SelectedValue == null)
+            {
+                return;
+            }
+            int indexOfPending = Note_List.SelectedIndex;
+            string finishTime = DateTime.Now.ToString();
+            deletedNotesList.Add(new OldNotes(pendingNotesList[indexOfPending].note,pendingNotesList[indexOfPending].title, pendingNotesList[indexOfPending].date,finishTime));
+            pendingNotesList.RemoveAt(indexOfPending);
+            Mostrar_Notas();
+            Escribir_notas_borradas();
+            Escribir_notas_pendientes();
         }
 
-        private void Note_List_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Mostrar_notas_de_pendientes_Click(object sender, RoutedEventArgs e)
         {
-
+            if (Note_List.SelectedValue == null)
+            {
+                return;
+            }
+            int indexOfPending = Note_List.SelectedIndex;
+            MessageBox.Show(pendingNotesList[indexOfPending].note,"Nota");
         }
-    }
-    public class Notes
-    {
-        public int id { get; set; }
-        public string note { get; set; }
-        public string date { get; set; }
-
-        public Notes(int id, string note)
+        private void Mostrar_notas_archivadas_Click(object sender, RoutedEventArgs e)
         {
-            this.id = id;
-            this.note = note;
-            this.date = DateTime.Now.ToString();
+            if (Archive_Notes.SelectedValue == null)
+            {
+                return;
+            }
+            int indexOfPending = Archive_Notes.SelectedIndex;
+            MessageBox.Show(archivedNotesList[indexOfPending].note, "Nota");
         }
-    }
-    public class OldNotes : Notes
-    {
-        public string FinishDate { get; set; }
-
-        public OldNotes(int id, string note, string date) : base(id, note)
+        private void Mostrar_notas_borradas_Click(object sender, RoutedEventArgs e)
         {
-            FinishDate = DateTime.Now.ToString();
+            if (Deleted_Notes.SelectedValue == null)
+            {
+                return;
+            }
+            int indexOfPending = Deleted_Notes.SelectedIndex;
+            MessageBox.Show(deletedNotesList[indexOfPending].note, "Nota");
+        }
+
+        //funcion para el reloj
+        private void reloj()
+        {
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Tick += tickevent;
+            timer.Start();
+        }
+
+        private void tickevent(object sender, EventArgs e)
+        {
+            Clock_box.Text = DateTime.Now.ToString();
         }
     }
 }
